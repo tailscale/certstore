@@ -14,7 +14,9 @@ the Tailscale fork.
 As of this writing, the [RSA-PSS PR](https://github.com/github/certstore/pull/18) has been
 under review for several months and the machine certificate store change has not yet been sent
 to the github maintainer for review. Ideally these changes will make their way back into the
-original module and we can discontinue this fork at some point in the future.
+original module and we can
+[discontinue this fork](https://github.com/tailscale/tailscale/issues/2005) at some point in
+the future.
 
 ## Example
 
