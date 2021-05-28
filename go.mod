@@ -1,4 +1,4 @@
-module github.com/github/certstore
+module github.com/tailscale/certstore
 
 go 1.12
 
