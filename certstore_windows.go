@@ -399,8 +399,6 @@ func (wpk *winPrivateKey) cngSignHash(opts crypto.SignerOpts, digest []byte) ([]
 	if _, isRSA := wpk.publicKey.(*rsa.PublicKey); isRSA {
 		var algId C.LPCWSTR
 		switch hash {
-		case crypto.SHA1:
-			algId = BCRYPT_SHA1_ALGORITHM
 		case crypto.SHA256:
 			algId = BCRYPT_SHA256_ALGORITHM
 		case crypto.SHA384:
@@ -476,8 +474,6 @@ func (wpk *winPrivateKey) capiSignHash(opts crypto.SignerOpts, digest []byte) ([
 	var hash_alg C.ALG_ID
 
 	switch hash {
-	case crypto.SHA1:
-		hash_alg = C.CALG_SHA1
 	case crypto.SHA256:
 		hash_alg = C.CALG_SHA_256
 	case crypto.SHA384:
