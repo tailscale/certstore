@@ -5,7 +5,6 @@ import (
 	"crypto/ecdsa"
 	"crypto/rand"
 	"crypto/rsa"
-	"crypto/sha1"
 	"crypto/sha256"
 	"crypto/sha512"
 	"crypto/x509"
@@ -115,20 +114,9 @@ func TestSignerRSA(t *testing.T) {
 			t.Fatalf("bad N. Got %s, expected %s", rsaPub.N.Text(16), rsaPriv.N.Text(16))
 		}
 
-		// SHA1WithRSA
-		sha1Digest := sha1.Sum([]byte("hello"))
-		sig, err := signer.Sign(rand.Reader, sha1Digest[:], crypto.SHA1)
-		if err != nil {
-			// SHA1 should be supported by all platforms.
-			t.Fatal(err)
-		}
-		if err = leafRSA.Certificate.CheckSignature(x509.SHA1WithRSA, []byte("hello"), sig); err != nil {
-			t.Fatal(err)
-		}
-
 		// SHA256WithRSA
 		sha256Digest := sha256.Sum256([]byte("hello"))
-		sig, err = signer.Sign(rand.Reader, sha256Digest[:], crypto.SHA256)
+		sig, err := signer.Sign(rand.Reader, sha256Digest[:], crypto.SHA256)
 		if err == ErrUnsupportedHash {
 			// Some Windows CSPs may not support this algorithm. Pass...
 		} else if err != nil {
@@ -166,7 +154,7 @@ func TestSignerRSA(t *testing.T) {
 		}
 
 		// Bad digest size
-		_, err = signer.Sign(rand.Reader, sha1Digest[5:], crypto.SHA1)
+		_, err = signer.Sign(rand.Reader, sha256Digest[5:], crypto.SHA256)
 		if err == nil {
 			t.Fatal("expected error for bad digest size")
 		}
@@ -206,19 +194,9 @@ func TestSignerECDSA(t *testing.T) {
 			t.Fatalf("bad Y. Got %s, expected %s", ecPub.Y.Text(16), ecPriv.Y.Text(16))
 		}
 
-		// ECDSAWithSHA1
-		sha1Digest := sha1.Sum([]byte("hello"))
-		sig, err := signer.Sign(rand.Reader, sha1Digest[:], crypto.SHA1)
-		if err != nil {
-			t.Fatal(err)
-		}
-		if err = leafEC.Certificate.CheckSignature(x509.ECDSAWithSHA1, []byte("hello"), sig); err != nil {
-			t.Fatal(err)
-		}
-
 		// ECDSAWithSHA256
 		sha256Digest := sha256.Sum256([]byte("hello"))
-		sig, err = signer.Sign(rand.Reader, sha256Digest[:], crypto.SHA256)
+		sig, err := signer.Sign(rand.Reader, sha256Digest[:], crypto.SHA256)
 		if err != nil {
 			t.Fatal(err)
 		}

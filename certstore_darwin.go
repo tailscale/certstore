@@ -310,8 +310,6 @@ func (i *macIdentity) getAlgo(opts crypto.SignerOpts) (algo C.SecKeyAlgorithm, e
 
 	if _, ok := opts.(*rsa.PSSOptions); ok {
 		switch hash {
-		case crypto.SHA1:
-			algo = C.kSecKeyAlgorithmRSASignatureDigestPSSSHA1
 		case crypto.SHA256:
 			algo = C.kSecKeyAlgorithmRSASignatureDigestPSSSHA256
 		case crypto.SHA384:
@@ -328,8 +326,6 @@ func (i *macIdentity) getAlgo(opts crypto.SignerOpts) (algo C.SecKeyAlgorithm, e
 	switch crt.PublicKey.(type) {
 	case *ecdsa.PublicKey:
 		switch hash {
-		case crypto.SHA1:
-			algo = C.kSecKeyAlgorithmECDSASignatureDigestX962SHA1
 		case crypto.SHA256:
 			algo = C.kSecKeyAlgorithmECDSASignatureDigestX962SHA256
 		case crypto.SHA384:
@@ -341,8 +337,6 @@ func (i *macIdentity) getAlgo(opts crypto.SignerOpts) (algo C.SecKeyAlgorithm, e
 		}
 	case *rsa.PublicKey:
 		switch hash {
-		case crypto.SHA1:
-			algo = C.kSecKeyAlgorithmRSASignatureDigestPKCS1v15SHA1
 		case crypto.SHA256:
 			algo = C.kSecKeyAlgorithmRSASignatureDigestPKCS1v15SHA256
 		case crypto.SHA384:
