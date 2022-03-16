@@ -1,0 +1,24 @@
+'on':
+  - pull_request
+name: Test Windows regression
+jobs:
+  test:
+    runs-on:
+      - windows-latest
+    steps:
+      - name: Install Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: '1.17'
+      - name: Grab code
+        uses: actions/checkout@v2
+        with:
+          repository: tailscale/go
+          ref: refs/heads/josh/winblah
+          path: gofork
+      - name: Build toolchain
+        run: cd gofork/src && ./make.bat
+      - name: Compile code
+        run: gofork/src/bin/go.exe build -v ./...
+      - name: Fail
+        run: why github actions do you cause me such pain
