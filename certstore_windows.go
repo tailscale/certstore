@@ -39,7 +39,6 @@ import (
 	"fmt"
 	"io"
 	"math/big"
-	"strconv"
 	"unicode/utf16"
 	"unsafe"
 
@@ -65,10 +64,11 @@ const (
 // API will be used.
 //
 // Possible values are:
-//   0x00000000 —                                      — Only use CryptoAPI.
-//   0x00010000 — CRYPT_ACQUIRE_ALLOW_NCRYPT_KEY_FLAG  — Prefer CryptoAPI.
-//   0x00020000 — CRYPT_ACQUIRE_PREFER_NCRYPT_KEY_FLAG — Prefer CNG.
-//   0x00040000 — CRYPT_ACQUIRE_ONLY_NCRYPT_KEY_FLAG   — Only uyse CNG.
+//
+//	0x00000000 —                                      — Only use CryptoAPI.
+//	0x00010000 — CRYPT_ACQUIRE_ALLOW_NCRYPT_KEY_FLAG  — Prefer CryptoAPI.
+//	0x00020000 — CRYPT_ACQUIRE_PREFER_NCRYPT_KEY_FLAG — Prefer CNG.
+//	0x00040000 — CRYPT_ACQUIRE_ONLY_NCRYPT_KEY_FLAG   — Only uyse CNG.
 var winAPIFlag C.DWORD = C.CRYPT_ACQUIRE_PREFER_NCRYPT_KEY_FLAG
 
 // winStore is a wrapper around a C.HCERTSTORE.
@@ -77,7 +77,7 @@ type winStore struct {
 }
 
 // openStore opens the current user's personal cert store.
-func openStore(location StoreLocation) (*winStore, error) {
+func openStore(location StoreLocation, permissions ...StorePermission) (*winStore, error) {
 	storeName := unsafe.Pointer(stringToUTF16("MY"))
 	defer C.free(storeName)
 
@@ -86,7 +86,14 @@ func openStore(location StoreLocation) (*winStore, error) {
 	case User:
 		flags |= C.CERT_SYSTEM_STORE_CURRENT_USER
 	case System:
-		flags |= C.CERT_SYSTEM_STORE_LOCAL_MACHINE | C.CERT_STORE_READONLY_FLAG
+		flags |= C.CERT_SYSTEM_STORE_LOCAL_MACHINE
+	}
+
+	for _, p := range permissions {
+		switch p {
+		case ReadOnly:
+			flags |= C.CERT_STORE_READONLY_FLAG
+		}
 	}
 
 	store := C.CertOpenStore(CERT_STORE_PROV_SYSTEM_W, 0, 0, flags, storeName)
@@ -367,7 +374,7 @@ func (wpk *winPrivateKey) Public() crypto.PublicKey {
 }
 
 // Sign implements the crypto.Signer interface.
-func (wpk *winPrivateKey) Sign(rand io.Reader, digest []byte, opts crypto.SignerOpts) ([]byte, error) {
+func (wpk *winPrivateKey) Sign(_ io.Reader, digest []byte, opts crypto.SignerOpts) ([]byte, error) {
 	if wpk.capiProv != 0 {
 		return wpk.capiSignHash(opts, digest)
 	} else if wpk.cngHandle != 0 {
@@ -411,8 +418,10 @@ func (wpk *winPrivateKey) cngSignHash(opts crypto.SignerOpts, digest []byte) ([]
 
 		if pssOpts, ok := opts.(*rsa.PSSOptions); ok {
 			saltLen := pssOpts.SaltLength
-			if saltLen < 0 {
+			if saltLen == rsa.PSSSaltLengthEqualsHash {
 				saltLen = len(digest)
+			} else if saltLen == rsa.PSSSaltLengthAuto {
+				saltLen = hash.Size()
 			}
 			padPtr = unsafe.Pointer(&C.BCRYPT_PSS_PADDING_INFO{
 				pszAlgId: algId,
@@ -465,6 +474,10 @@ func (wpk *winPrivateKey) cngSignHash(opts crypto.SignerOpts, digest []byte) ([]
 
 // capiSignHash signs a digest using the CryptoAPI APIs.
 func (wpk *winPrivateKey) capiSignHash(opts crypto.SignerOpts, digest []byte) ([]byte, error) {
+	if _, ok := opts.(*rsa.PSSOptions); ok {
+		return nil, ErrUnsupportedHash
+	}
+
 	hash := opts.HashFunc()
 	if len(digest) != hash.Size() {
 		return nil, errors.New("bad digest for hash")
@@ -684,10 +697,7 @@ func checkStatus(s C.SECURITY_STATUS) error {
 }
 
 func (ss securityStatus) Error() string {
-	enc := make([]byte, 2, 10)
-	copy(enc, "0x")
-	h := strconv.AppendUint(enc, uint64(ss), 16)
-	return fmt.Sprintf("SECURITY_STATUS %s", string(h))
+	return fmt.Sprintf("SECURITY_STATUS 0x%08X", uint64(ss))
 }
 
 func stringToUTF16(s string) C.LPCWSTR {
