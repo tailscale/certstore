@@ -10,6 +10,7 @@ import (
 	"testing"
 
 	"github.com/github/fakeca"
+	"software.sslmate.com/src/go-pkcs12"
 )
 
 var (
@@ -54,7 +55,8 @@ func withStore(t *testing.T, cb func(Store)) {
 func withIdentity(t *testing.T, i *fakeca.Identity, cb func(Identity)) {
 	withStore(t, func(store Store) {
 		// Import an identity
-		if err := store.Import(i.PFX("asdf"), "asdf"); err != nil {
+		pfx, err := pkcs12.Encode(rand.Reader, i.PrivateKey, i.Certificate, nil, "asdf")
+		if err := store.Import(pfx, "asdf"); err != nil {
 			t.Fatal(err)
 		}
 

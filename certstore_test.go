@@ -11,6 +11,7 @@ import (
 	"testing"
 
 	"github.com/github/fakeca"
+	"software.sslmate.com/src/go-pkcs12"
 )
 
 func TestImportDeleteRSA(t *testing.T) {
@@ -25,7 +26,11 @@ func TestImportDeleteECDSA(t *testing.T) {
 func ImportDeleteHelper(t *testing.T, i *fakeca.Identity) {
 	withStore(t, func(store Store) {
 		// Import an identity
-		if err := store.Import(i.PFX("asdf"), "asdf"); err != nil {
+		pfx, err := pkcs12.Encode(rand.Reader, i.PrivateKey, i.Certificate, nil, "asdf")
+		if err != nil {
+			t.Fatal(err)
+		}
+		if err := store.Import(pfx, "asdf"); err != nil {
 			t.Fatal(err)
 		}
 
