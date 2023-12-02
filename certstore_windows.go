@@ -31,7 +31,7 @@ var (
 	//	windows.CRYPT_ACQUIRE_ALLOW_NCRYPT_KEY_FLAG  — Prefer CryptoAPI.
 	//	windows.CRYPT_ACQUIRE_PREFER_NCRYPT_KEY_FLAG — Prefer CNG.
 	//	windows.CRYPT_ACQUIRE_ONLY_NCRYPT_KEY_FLAG   — Only use CNG.
-	winAPIFlag uint32 = windows.CRYPT_ACQUIRE_ALLOW_NCRYPT_KEY_FLAG
+	winAPIFlag uint32 = windows.CRYPT_ACQUIRE_PREFER_NCRYPT_KEY_FLAG
 )
 
 // winStore is a wrapper around a certStoreHandle.
